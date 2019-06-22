@@ -40,6 +40,6 @@
 @property NSString *callbackId;
 @property (nonatomic) NSURLSessionDownloadTask *task;
 
-- (id) initWithPath:(NSString *)filePath uri:(NSString *)uri uriMatcher:(NSString *)uriMatcher callbackId:(NSString *)callbackId task:(NSURLSessionDownloadTask *)task;
+- (id) initWithPath:(NSString *)filePath downloadUri:(NSString *)downloadUri uriMatcher:(NSString *)uriMatcher callbackId:(NSString *)callbackId task:(NSURLSessionDownloadTask *)task;
 
 @end

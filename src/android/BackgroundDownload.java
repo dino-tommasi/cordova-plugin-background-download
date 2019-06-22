@@ -78,25 +78,22 @@ public class BackgroundDownload extends CordovaPlugin {
     private static class Download {
         private String uriString;
         private String uriMatcher;
-        private String domain;
+        private String serverUrl;
         private Uri tempFileUri;
         private Uri targetFileUri;
-        private String notificationTitle;
         private CallbackContext callbackContext; // The callback context from which we were invoked.
 
         private long downloadId = DOWNLOAD_ID_UNDEFINED;
         private Timer timerProgressUpdate = null;
         private boolean isCanceled;
 
-        Download(String uriString, String targetFileUri, String notificationTitle,
-                 String uriMatcher, String domain, CallbackContext callbackContext) {
+        Download(String uriString, String targetFileUri, String serverUrl, String uriMatcher, CallbackContext callbackContext) {
             this.setUriString(uriString);
             this.setUriMatcher(uriMatcher);
-            this.setDomain(domain);
+            this.setServerUrl(serverUrl);
             this.setTempFileUri(Uri.fromFile(new File(android.os.Environment.getExternalStorageDirectory().getPath(),
                     Uri.parse(targetFileUri).getLastPathSegment() + "." + System.currentTimeMillis())).toString());
             this.setTargetFileUri(targetFileUri);
-            this.setNotificationTitle(notificationTitle);
             this.setCallbackContext(callbackContext);
         }
 
@@ -116,12 +113,12 @@ public class BackgroundDownload extends CordovaPlugin {
             this.uriMatcher = uriMatcher;
         }
 
-        String getDomain() {
-            return domain;
+        String getServerUrl() {
+            return serverUrl;
         }
 
-        void setDomain(String domain) {
-            this.domain = domain;
+        void setServerUrl(String serverUrl) {
+            this.serverUrl = serverUrl;
         }
 
         Uri getTempFileUri() {
@@ -138,14 +135,6 @@ public class BackgroundDownload extends CordovaPlugin {
 
         void setTargetFileUri(String targetFileUri) {
             this.targetFileUri = Uri.parse(targetFileUri);
-        }
-
-        String getNotificationTitle() {
-            return this.notificationTitle;
-        }
-
-        void setNotificationTitle(String notificationTitle) {
-            this.notificationTitle = notificationTitle;
         }
 
         CallbackContext getCallbackContext() {
@@ -193,20 +182,17 @@ public class BackgroundDownload extends CordovaPlugin {
         }
 
         public static Download create(JSONArray args, CallbackContext callbackContext) throws JSONException {
-            String uriMatcher = null;
+            String serverUrl = null;
             if (args.length() > 2 && !"null".equals(args.getString(2))) {
-                uriMatcher = args.getString(2);
+                serverUrl = args.getString(2);
             }
 
-            String notificationTitle = "Mobile App";
+            String uriMatcher = null;
             if (args.length() > 3 && !"null".equals(args.getString(3))) {
-                notificationTitle = args.getString(3);
+                uriMatcher = args.getString(3);
             }
 
-            String domain = args.getString(4);
-
-            return new Download(args.get(0).toString(), args.get(1).toString(), notificationTitle,
-                    uriMatcher, domain, callbackContext);
+            return new Download(args.get(0).toString(), args.get(1).toString(), serverUrl, uriMatcher, callbackContext);
         }
     }
 
@@ -244,7 +230,7 @@ public class BackgroundDownload extends CordovaPlugin {
 
     private String getCookie(Download download) {
         CookieManager cookieManager = CookieManager.getInstance();
-        return cookieManager.getCookie(download.getDomain());
+        return cookieManager.getCookie(download.getServerUrl());
     }
 
     private void startAsync(JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -267,22 +253,19 @@ public class BackgroundDownload extends CordovaPlugin {
 
                 DownloadManager downloadManager = getDownloadManager();
                 DownloadManager.Request request = new DownloadManager.Request(source);
-                request.setTitle(download.getNotificationTitle());
                 request.setVisibleInDownloadsUi(false);
-
-                // hide notification. Not compatible with current android api.
-                // request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
 
                 // we use default settings for roaming and network type
                 // request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
                 // request.setAllowedOverRoaming(false);
 
-                request.setDestinationUri(download.getTempFileUri());
-
                 String cookie = getCookie(download);
                 if (cookie != null) {
                     request.addRequestHeader("Cookie", cookie);
                 }
+
+                request.setDestinationUri(download.getTempFileUri());
 
                 download.setDownloadId(downloadManager.enqueue(request));
             } catch (Exception ex) {
@@ -334,20 +317,20 @@ public class BackgroundDownload extends CordovaPlugin {
                             long bytesDownloaded = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
                             long bytesTotal = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
                             JSONObject jsonProgress = new JSONObject();
-                            jsonProgress.put("bytesReceived", bytesDownloaded);
-                            jsonProgress.put("totalBytesToReceive", bytesTotal);
+                            jsonProgress.put("loaded", bytesDownloaded);
+                            jsonProgress.put("total", bytesTotal);
                             obj = new JSONObject();
                             obj.put("progress", jsonProgress);
                             break;
                         case DownloadManager.STATUS_PAUSED:
                             JSONObject pauseMessage = new JSONObject();
-                            pauseMessage.put("message", "Download paused with reason " + reason);
+                            pauseMessage.put("message", "Download paused with reason: " + getUserFriendlyReason(reason));
                             obj = new JSONObject();
                             obj.put("progress", pauseMessage);
                             break;
                         case DownloadManager.STATUS_PENDING:
                             JSONObject pendingMessage = new JSONObject();
-                            pendingMessage.put("message", "Download pending with reason " + reason);
+                            pendingMessage.put("message", "Download pending with reason: " + getUserFriendlyReason(reason));
                             obj = new JSONObject();
                             obj.put("progress", pendingMessage);
                             break;
@@ -392,56 +375,56 @@ public class BackgroundDownload extends CordovaPlugin {
     }
 
     private static String getUserFriendlyReason(int reason) {
-        String failedReason = "";
+        String messageReason = "";
         switch (reason) {
             case DownloadManager.ERROR_CANNOT_RESUME:
-                failedReason = "ERROR_CANNOT_RESUME";
+                messageReason = "ERROR_CANNOT_RESUME";
                 break;
             case DownloadManager.ERROR_DEVICE_NOT_FOUND:
-                failedReason = "ERROR_DEVICE_NOT_FOUND";
+                messageReason = "ERROR_DEVICE_NOT_FOUND";
                 break;
             case DownloadManager.ERROR_FILE_ALREADY_EXISTS:
-                failedReason = "ERROR_FILE_ALREADY_EXISTS";
+                messageReason = "ERROR_FILE_ALREADY_EXISTS";
                 break;
             case DownloadManager.ERROR_FILE_ERROR:
-                failedReason = "ERROR_FILE_ERROR";
+                messageReason = "ERROR_FILE_ERROR";
                 break;
             case DownloadManager.ERROR_HTTP_DATA_ERROR:
-                failedReason = "ERROR_HTTP_DATA_ERROR";
+                messageReason = "ERROR_HTTP_DATA_ERROR";
                 break;
             case DownloadManager.ERROR_INSUFFICIENT_SPACE:
-                failedReason = "ERROR_INSUFFICIENT_SPACE";
+                messageReason = "ERROR_INSUFFICIENT_SPACE";
                 break;
             case DownloadManager.ERROR_TOO_MANY_REDIRECTS:
-                failedReason = "ERROR_TOO_MANY_REDIRECTS";
+                messageReason = "ERROR_TOO_MANY_REDIRECTS";
                 break;
             case DownloadManager.ERROR_UNHANDLED_HTTP_CODE:
-                failedReason = "ERROR_UNHANDLED_HTTP_CODE";
+                messageReason = "ERROR_UNHANDLED_HTTP_CODE";
                 break;
             case DownloadManager.ERROR_UNKNOWN:
-                failedReason = "ERROR_UNKNOWN";
+                messageReason = "ERROR_UNKNOWN";
                 break;
             case HttpURLConnection.HTTP_BAD_REQUEST:
-                failedReason = "BAD_REQUEST";
+                messageReason = "BAD_REQUEST";
                 break;
             case HttpURLConnection.HTTP_UNAUTHORIZED:
-                failedReason = "UNAUTHORIZED";
+                messageReason = "UNAUTHORIZED";
                 break;
             case HttpURLConnection.HTTP_FORBIDDEN:
-                failedReason = "FORBIDDEN";
+                messageReason = "FORBIDDEN";
                 break;
             case HttpURLConnection.HTTP_NOT_FOUND:
-                failedReason = "NOT_FOUND";
+                messageReason = "NOT_FOUND";
                 break;
             case HttpURLConnection.HTTP_INTERNAL_ERROR:
-                failedReason = "INTERNAL_SERVER_ERROR";
+                messageReason = "INTERNAL_SERVER_ERROR";
                 break;
             case ERROR_CANCELED:
-                failedReason = "CANCELED";
+                messageReason = "CANCELED";
                 break;
         }
 
-        return failedReason;
+        return messageReason;
     }
 
     private void stop(JSONArray args, CallbackContext callbackContext) throws JSONException {

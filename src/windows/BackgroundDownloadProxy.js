@@ -17,8 +17,8 @@ module.exports = {
             var progressHandler = function (operation) {
 
                 var progress = {
-                    bytesReceived: operation.progress.bytesReceived,
-                    totalBytesToReceive: operation.progress.totalBytesToReceive
+                    loaded: operation.progress.loaded,
+                    total: operation.progress.total
                 };
 
                 success({

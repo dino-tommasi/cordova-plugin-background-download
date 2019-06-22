@@ -25,23 +25,21 @@ var exec = require('cordova/exec'),
 /**
  * Performs an asynchronous download operation in the background.
  *
- * @param {string} uri The location of the resource.
+ * @param {string} downloadUri The location of the resource.
  * @param {File} resultFile The file that the response will be written to.
+ * @param {string} serverUrl Domain of the connection. Required for connections with authorization
  * @param {string} uriMatcher The regexp to compare location of the resources with already downloading ones.
- * @param {string} [notificationTitle] The title for downloading in notification.
- * @param {string} [domain] Domain of the connection. Required for connections with authorization
  */
-var DownloadOperation = function (uri, resultFile, uriMatcher, notificationTitle, domain) {
+var DownloadOperation = function (downloadUri, resultFile, serverUrl, uriMatcher) {
 
-    if (uri == null || resultFile == null) {
+    if (downloadUri == null || resultFile == null) {
         throw new Error("missing or invalid argument");
     }
     
-    this.uri = uri;
+    this.downloadUri = downloadUri;
     this.resultFile = resultFile;
+    this.serverUrl = serverUrl;
     this.uriMatcher = uriMatcher;
-    this.notificationTitle = notificationTitle;
-    this.domain = domain;
 };
 
 /**
@@ -66,7 +64,7 @@ DownloadOperation.prototype.startAsync = function() {
             deferral.reject(err);
         };
 
-    exec(successCallback, errorCallback, "BackgroundDownload", "startAsync", [this.uri, this.resultFile.toURL(), this.uriMatcher, this.notificationTitle, this.domain]);
+    exec(successCallback, errorCallback, "BackgroundDownload", "startAsync", [this.downloadUri, this.resultFile.toURL(), this.serverUrl, this.uriMatcher]);
 
     // custom mechanism to trigger stop when user cancels pending operation
     deferral.promise.onCancelled = function () {
@@ -81,7 +79,7 @@ DownloadOperation.prototype.startAsync = function() {
  */
 DownloadOperation.prototype.stop = function() {
     // TODO return promise
-    exec(null, null, "BackgroundDownload", "stop", [this.uri]);
+    exec(null, null, "BackgroundDownload", "stop", [this.downloadUri]);
 
 };
 

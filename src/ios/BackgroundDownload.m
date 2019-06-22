@@ -26,8 +26,8 @@
 
 @synthesize session;
 
-- (Download *) downloadItemWithUri:(NSString *) uri {
-    return activeDownloads ? [activeDownloads valueForKey:uri] : nil;
+- (Download *) downloadItemWithUri:(NSString *) downloadUri {
+    return activeDownloads ? [activeDownloads valueForKey:downloadUri] : nil;
 }
 
 
@@ -55,21 +55,21 @@
     session = [self backgroundSession];
 
     [session getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
-        NSString *uri = [command.arguments objectAtIndex:0];
-        Download *downloadItem = [activeDownloads valueForKey:uri];
+        NSString *downloadUri = [command.arguments objectAtIndex:0];
+        Download *downloadItem = [activeDownloads valueForKey:downloadUri];
         NSString *uriMatcher = nil;
-        if (command.arguments.count > 2 &&
-            ![[command.arguments objectAtIndex:2] isEqual:[NSNull null]]) {
-            uriMatcher = [command.arguments objectAtIndex:2];
+        if (command.arguments.count > 3 &&
+            ![[command.arguments objectAtIndex:3] isEqual:[NSNull null]]) {
+            uriMatcher = [command.arguments objectAtIndex:3];
         }
 
         if (!downloadItem) {
-            NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:uri]];
+            NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:downloadUri]];
             downloadItem = [[Download alloc] initWithPath:[command.arguments objectAtIndex:1]
-                                                      uri:uri
-                                               uriMatcher:uriMatcher
-                                               callbackId:command.callbackId
-                                                     task:nil];
+                                                          downloadUri:downloadUri
+                                                          uriMatcher:uriMatcher
+                                                          callbackId:command.callbackId
+                                                          task:nil];
             [self attachToExistingDownload:downloadTasks downloadItem:downloadItem];
             if (downloadItem.task == nil) {
                 downloadItem.task = [session downloadTaskWithRequest:request];
@@ -172,9 +172,9 @@
     }
 }
 
--(void) cleanUpWithUri:(NSString*) uri
+-(void) cleanUpWithUri:(NSString*) downloadUri
 {
-    Download *curDownload = [self downloadItemWithUri: uri];
+    Download *curDownload = [self downloadItemWithUri: downloadUri];
     [self cleanUp:curDownload];
 }
 
@@ -185,8 +185,8 @@
         return;
 
     NSMutableDictionary* progressObj = [NSMutableDictionary dictionaryWithCapacity:1];
-    [progressObj setObject:[NSNumber numberWithInteger:totalBytesWritten] forKey:@"bytesReceived"];
-    [progressObj setObject:[NSNumber numberWithInteger:totalBytesExpectedToWrite] forKey:@"totalBytesToReceive"];
+    [progressObj setObject:[NSNumber numberWithInteger:totalBytesWritten] forKey:@"loaded"];
+    [progressObj setObject:[NSNumber numberWithInteger:totalBytesExpectedToWrite] forKey:@"total"];
     NSMutableDictionary* resObj = [NSMutableDictionary dictionaryWithCapacity:1];
     [resObj setObject:progressObj forKey:@"progress"];
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resObj];
@@ -273,11 +273,11 @@
 
 @implementation Download
 
-- (id) initWithPath:(NSString *)filePath uri:(NSString *)uri uriMatcher:(NSString *)uriMatcher callbackId:(NSString *)callbackId task:(NSURLSessionDownloadTask *)task {
+- (id) initWithPath:(NSString *)filePath downloadUri:(NSString *)downloadUri uriMatcher:(NSString *)uriMatcher callbackId:(NSString *)callbackId task:(NSURLSessionDownloadTask *)task {
     if ( self = [super init] ) {
         self.error = nil;
         self.filePath = filePath;
-        self.uriString = uri;
+        self.uriString = downloadUri;
         self.uriMatcher = uriMatcher;
         self.callbackId = callbackId;
         self.task = task;

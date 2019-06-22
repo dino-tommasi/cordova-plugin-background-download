@@ -37,7 +37,7 @@ var app = {
             lblProgress.innerHTML = 'Error: ' + err;
         };
         var progress = function(progress) {
-            lblProgress.innerHTML = (100 * progress.bytesReceived / progress.totalBytesToReceive) + '%';
+            lblProgress.innerHTML = (100 * progress.loaded / progress.total) + '%';
         };
 
         try {
