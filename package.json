@@ -6,32 +6,21 @@
     "id": "cordova-plugin-background-download",
     "platforms": [
       "android",
-      "ios",
-      "wp8",
-      "windows8",
-      "windows"
+      "ios"
     ]
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dino-tommasi/cordova-plugin-background-download.git"
-  },
-  "keywords": [
-    "cordova",
-    "background",
-    "file",
-    "download",
-    "ecosystem:cordova",
-    "cordova-android",
-    "cordova-ios",
-    "cordova-wp8",
-    "cordova-windows8",
-    "cordova-windows"
-  ],
-  "author": "Dino Tommasi",
-  "license": "Apache 2.0",
+  "repository": "github:dino-tommasi/cordova-plugin-background-download",
   "bugs": {
     "url": "https://github.com/dino-tommasi/cordova-plugin-background-download/issues"
   },
-  "homepage": "https://github.com/dino-tommasi/cordova-plugin-background-download#readme"
+  "keywords": [
+    "cordova",
+    "file",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "author": "Dino Tommasi",
+  "license": "Apache-2.0"
 }
