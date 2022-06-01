@@ -1,7 +1,7 @@
 {
   "name": "cordova-plugin-background-download",
   "version": "1.0.0",
-  "description": "Background Download",
+  "description": "Background Download Plugin for Cordova.",
   "cordova": {
     "id": "cordova-plugin-background-download",
     "platforms": [
@@ -11,15 +11,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dino-tommasi/cordova-plugin-background-download.git"
+    "url": "github:dino-tommasi/cordova-plugin-background-download"
   },
   "keywords": [
     "ecosystem:cordova",
     "cordova-android",
     "cordova-ios"
   ],
+  "engines": {
+    "cordova": ">=9.0.0"
+  },
   "author": "ECSystems",
-  "license": "ISC",
+  "license": "Apache 2.0",
   "bugs": {
     "url": "https://github.com/dino-tommasi/cordova-plugin-background-download/issues"
   },

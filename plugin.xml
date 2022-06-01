@@ -1,6 +1,13 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <plugin id="cordova-plugin-background-download" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
-	<name>BackgroundDownload</name>
+	<name>Background Download</name>
+	<description>Background Download Plugin for Cordova.</description>
+	<license>Apache 2.0</license>
+
+	<engines>
+		<engine name="cordova" version=">=9.0.0"/>
+	</engines>
+
 	<js-module src="www/Promise.js" name="Promise"/>
 	<js-module name="BackgroundDownloader" src="www/BackgroundDownloader.js">
 		<clobbers target="BackgroundTransfer.BackgroundDownloader"/>
