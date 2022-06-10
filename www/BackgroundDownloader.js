@@ -16,9 +16,10 @@ var BackgroundDownloader = function(uriMatcher) {
  * @param {String} downloadUri The location of the resource.
  * @param {File} resultFile The file that the response will be written to.
  * @param {String} serverUrl Domain of the connection. Required for connections with authorization
+ * @param {Boolean} showNotification
  */
-BackgroundDownloader.prototype.createDownload = function(downloadUri, resultFile, serverUrl) {
-    return new DownloadOperation(downloadUri, resultFile, serverUrl, this.uriMatcher);
+BackgroundDownloader.prototype.createDownload = function(downloadUri, resultFile, serverUrl, showNotification = false) {
+    return new DownloadOperation(downloadUri, resultFile, serverUrl, this.uriMatcher, showNotification);
 };
 
 module.exports = BackgroundDownloader;

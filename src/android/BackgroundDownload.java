@@ -235,8 +235,11 @@ public class BackgroundDownload extends CordovaPlugin {
 
                 DownloadManager downloadManager = getDownloadManager();
                 DownloadManager.Request request = new DownloadManager.Request(source);
-                request.setVisibleInDownloadsUi(false);
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
+                int notificationVisibility = DownloadManager.Request.VISIBILITY_HIDDEN;
+                if (args.length() > 4 && args.getBoolean(4)) {
+                    notificationVisibility = DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED;
+                }
+                request.setNotificationVisibility(notificationVisibility);
 
                 // we use default settings for roaming and network type
                 // request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);

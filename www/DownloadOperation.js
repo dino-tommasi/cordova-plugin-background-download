@@ -8,8 +8,9 @@
  * @param {File} resultFile The file that the response will be written to.
  * @param {string} serverUrl Domain of the connection. Required for connections with authorization
  * @param {string} uriMatcher The regexp to compare location of the resources with already downloading ones.
+ * @param showNotification
  */
-var DownloadOperation = function (downloadUri, resultFile, serverUrl, uriMatcher) {
+var DownloadOperation = function (downloadUri, resultFile, serverUrl, uriMatcher, showNotification) {
 
     if (downloadUri == null || resultFile == null) {
         throw new Error("missing or invalid argument");
@@ -19,6 +20,7 @@ var DownloadOperation = function (downloadUri, resultFile, serverUrl, uriMatcher
     this.resultFile = resultFile;
     this.serverUrl = serverUrl;
     this.uriMatcher = uriMatcher;
+    this.showNotification = showNotification || false;
 };
 
 /**
@@ -43,7 +45,7 @@ DownloadOperation.prototype.startAsync = function() {
             deferral.reject(err);
         };
 
-    exec(successCallback, errorCallback, "BackgroundDownload", "startAsync", [this.downloadUri, this.resultFile.toURL(), this.serverUrl, this.uriMatcher]);
+    exec(successCallback, errorCallback, "BackgroundDownload", "startAsync", [this.downloadUri, this.resultFile.toURL(), this.serverUrl, this.uriMatcher, this.showNotification]);
 
     // custom mechanism to trigger stop when user cancels pending operation
     deferral.promise.onCancelled = function () {
